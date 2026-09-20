@@ -18,7 +18,6 @@
             </StackPanel>
         </Grid>
 
-        <!-- Поля -->
         <ScrollViewer Grid.Row="1">
             <Grid ColumnDefinitions="240,*" RowSpacing="10"
                   RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
@@ -58,30 +57,35 @@
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="6" Grid.Column="1" Text="{Binding PodyomnayaSila}" MaxLength="4"/>
 
-                <!-- 7 — ВЕС -->
+                <!-- 7 -->
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Вес:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="7" Grid.Column="1" Text="{Binding Ves}" MaxLength="4"/>
 
-                <!-- 8 -->
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="Получатель:"
+                <!-- 8 — ЧИСЛО МЕСТ (только UI) -->
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Число мест:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBox   Grid.Row="8" Grid.Column="1" Text="{Binding Poluchatel}" MaxLength="3"/>
+                <TextBox   Grid.Row="8" Grid.Column="1" Text="{Binding ChisloMest}" MaxLength="4"/>
 
                 <!-- 9 -->
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="Дата документа (ДДММ):"
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="Получатель:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBox   Grid.Row="9" Grid.Column="1" Text="{Binding DataDokumenta}"
+                <TextBox   Grid.Row="9" Grid.Column="1" Text="{Binding Poluchatel}" MaxLength="3"/>
+
+                <!-- 10 -->
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="Дата документа (ДДММ):"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="10" Grid.Column="1" Text="{Binding DataDokumenta}"
                            MaxLength="4" Watermark="ДДММ"/>
 
-                <!-- 10 — заголовок "Типы вагонов" -->
-                <TextBlock Grid.Row="10" Grid.ColumnSpan="2"
+                <!-- 11 — заголовок -->
+                <TextBlock Grid.Row="11" Grid.ColumnSpan="2"
                            Text="Типы вагонов:"
                            FontWeight="SemiBold"
                            Margin="0,10,0,0"/>
 
-                <!-- 11 — 4 поля в строчку -->
-                <Grid Grid.Row="11" Grid.ColumnSpan="2"
+                <!-- 12 — 4 поля в строчку -->
+                <Grid Grid.Row="12" Grid.ColumnSpan="2"
                       ColumnDefinitions="*,*,*,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
                     <TextBox Grid.Column="0" Text="{Binding Vagon1}" MaxLength="6" Watermark="Вагон 1"/>

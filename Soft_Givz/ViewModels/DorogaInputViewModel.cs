@@ -20,11 +20,12 @@ public partial class DorogaInputViewModel : ViewModelBase
     [ObservableProperty] private string _stanciyaNaznacheniya = "";
     [ObservableProperty] private string _gruz = "";
     [ObservableProperty] private string _podyomnayaSila = "";
-    [ObservableProperty] private string _ves = "";           // ← ВЕС, новое
+    [ObservableProperty] private string _ves = "";
+    [ObservableProperty] private string _chisloMest = "";   // ← только UI, в БД пока не идёт
     [ObservableProperty] private string _poluchatel = "";
     [ObservableProperty] private string _dataDokumenta = "";
 
-    // ===== Вагоны (4 поля в строчку) =====
+    // ===== Вагоны =====
     [ObservableProperty] private string _vagon1 = "";
     [ObservableProperty] private string _vagon2 = "";
     [ObservableProperty] private string _vagon3 = "";
@@ -66,7 +67,7 @@ public partial class DorogaInputViewModel : ViewModelBase
                 DStnazn = NullIfEmpty(StanciyaNaznacheniya),
                 DGruz = NullIfEmpty(Gruz),
                 DPsila = ParseDecimal(PodyomnayaSila),
-                DVes = ParseDecimal(Ves),                   // ← вес
+                DVes = ParseDecimal(Ves),
                 DPoluhat = NullIfEmpty(Poluchatel),
                 DData = NullIfEmpty(DataDokumenta),
 
@@ -78,6 +79,9 @@ public partial class DorogaInputViewModel : ViewModelBase
                 DDataVv = DateTime.Today,
                 DTimeVv = DateTime.Now.ToString("HH:mm:ss")
             };
+
+            // ChisloMest пока НЕ пишется в БД. Куда его класть — решим позже.
+            _ = ChisloMest;
 
             await _repo.InsertAsync(model);
 
