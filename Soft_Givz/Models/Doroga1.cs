@@ -12,12 +12,12 @@ public class Doroga1
     public string? DStotp { get; set; }
     public string? DStnazn { get; set; }
     public string? DGruz { get; set; }
-    public decimal? DPsila { get; set; }
+    public decimal? DPsila { get; set; }     // подъёмная сила
+    public decimal? DVes { get; set; }       // ВЕС ← вот оно
     public string? DPoluhat { get; set; }
-    public decimal? DVes { get; set; }
     public string? DData { get; set; }
 
-    // === Номера вагонов (первые 4 из 9) ===
+    // === Номера вагонов ===
     public string? DVag1 { get; set; }
     public string? DVag2 { get; set; }
     public string? DVag3 { get; set; }

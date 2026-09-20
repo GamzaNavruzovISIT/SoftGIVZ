@@ -20,8 +20,8 @@ public partial class DorogaInputViewModel : ViewModelBase
     [ObservableProperty] private string _stanciyaNaznacheniya = "";
     [ObservableProperty] private string _gruz = "";
     [ObservableProperty] private string _podyomnayaSila = "";
+    [ObservableProperty] private string _ves = "";           // ← ВЕС, новое
     [ObservableProperty] private string _poluchatel = "";
-    [ObservableProperty] private string _chisloMest = "";
     [ObservableProperty] private string _dataDokumenta = "";
 
     // ===== Вагоны (4 поля в строчку) =====
@@ -48,7 +48,6 @@ public partial class DorogaInputViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        // === Валидация даты документа ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
             StatusMessage = dataError;
@@ -67,8 +66,8 @@ public partial class DorogaInputViewModel : ViewModelBase
                 DStnazn = NullIfEmpty(StanciyaNaznacheniya),
                 DGruz = NullIfEmpty(Gruz),
                 DPsila = ParseDecimal(PodyomnayaSila),
+                DVes = ParseDecimal(Ves),                   // ← вес
                 DPoluhat = NullIfEmpty(Poluchatel),
-                DVes = ParseDecimal(ChisloMest),
                 DData = NullIfEmpty(DataDokumenta),
 
                 DVag1 = NullIfEmpty(Vagon1),
@@ -98,14 +97,9 @@ public partial class DorogaInputViewModel : ViewModelBase
     private static bool TryValidateDataDokumenta(string input, out string? error)
     {
         error = null;
-
-        // Пустое поле — допустимо
-        if (string.IsNullOrWhiteSpace(input))
-            return true;
+        if (string.IsNullOrWhiteSpace(input)) return true;
 
         input = input.Trim();
-
-        // Должно быть ровно 4 цифры
         if (input.Length != 4 || !int.TryParse(input, out _))
         {
             error = "Дата документа должна быть в формате ДДММ (4 цифры)";
@@ -121,10 +115,7 @@ public partial class DorogaInputViewModel : ViewModelBase
             return false;
         }
 
-        // Используем текущий год для проверки, что день валиден в этом месяце.
-        // (Например, 29.02 — только в високосный год.)
         int year = DateTime.Today.Year;
-
         if (day < 1 || day > DateTime.DaysInMonth(year, month))
         {
             error = $"В месяце {month:00} нет дня {day:00}";
@@ -134,7 +125,6 @@ public partial class DorogaInputViewModel : ViewModelBase
         return true;
     }
 
-    // ===== Хелперы =====
     private static string? NullIfEmpty(string? s)
         => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
@@ -142,9 +132,7 @@ public partial class DorogaInputViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(s)) return null;
         s = s.Replace(',', '.');
-        return decimal.TryParse(s,
-            NumberStyles.Any,
-            CultureInfo.InvariantCulture,
-            out var v) ? v : null;
+        return decimal.TryParse(s, NumberStyles.Any,
+            CultureInfo.InvariantCulture, out var v) ? v : null;
     }
 }

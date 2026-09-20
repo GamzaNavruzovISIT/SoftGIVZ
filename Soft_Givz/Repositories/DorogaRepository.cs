@@ -24,12 +24,12 @@ public class DorogaRepository
         var sql = $@"
             INSERT INTO {Schema}.{TableName}
             (d_gmd, d_pach, d_nakl, d_otp_v, d_stotp, d_stnazn, d_gruz,
-             d_psila, d_poluhat, d_ves, d_data,
+             d_psila, d_ves, d_poluhat, d_data,
              d_vag1, d_vag2, d_vag3, d_vag4,
              d_data_vv, d_time_vv)
             VALUES
             (@DGmd, @DPach, @DNakl, @DOtpV, @DStotp, @DStnazn, @DGruz,
-             @DPsila, @DPoluhat, @DVes, @DData,
+             @DPsila, @DVes, @DPoluhat, @DData,
              @DVag1, @DVag2, @DVag3, @DVag4,
              @DDataVv, @DTimeVv)";
 
