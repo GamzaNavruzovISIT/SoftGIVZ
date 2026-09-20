@@ -1,22 +1,65 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Soft_Givz.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Soft_Givz.Views.MainWindow"
-        x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Soft_Givz">
+        x:DataType="vm:MainWindowViewModel"
+        Title="Учет ПТЖТ"
+        Width="1000" Height="700">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
-    </Design.DataContext>
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*">
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+        <!-- Верхняя левая кнопка -->
+        <Button Grid.Row="0" Grid.Column="0"
+                Content="Ввод/корректив данных"
+                Margin="10" Padding="15,8"
+                HorizontalAlignment="Left"
+                Command="{Binding ToggleEntryMenuCommand}" />
 
+        <!-- Блок кнопок справа -->
+        <StackPanel Grid.Row="0" Grid.Column="1"
+                    Orientation="Horizontal"
+                    Margin="10" Spacing="20"
+                    HorizontalAlignment="Right"
+                    IsVisible="{Binding IsEntryMenuVisible}">
+
+            <!-- Группа: Ведомости -->
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <Button Content="Ввод в ведомость 1"
+                        Padding="15,8"
+                        Command="{Binding EnterVedomost1Command}" />
+                <Button Content="Ввод в ведомость 2"
+                        Padding="15,8"
+                        Command="{Binding EnterVedomost2Command}" />
+                <Separator Margin="0,6"/>
+                <Button Content="Сравнить ведомости"
+                        Padding="15,8"
+                        Command="{Binding CompareVedomCommand}" />
+                <Button Content="Очистить ведомости"
+                        Padding="15,8"
+                        Command="{Binding ClearVedomCommand}" />
+            </StackPanel>
+
+            <!-- Группа: Дороги -->
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <Button Content="Ввод в дорога 1"
+                        Padding="15,8"
+                        Command="{Binding EnterDoroga1Command}" />
+                <Button Content="Ввод в дорога 2"
+                        Padding="15,8"
+                        Command="{Binding EnterDoroga2Command}" />
+                <Separator Margin="0,6"/>
+                <Button Content="Сравнить дороги"
+                        Padding="15,8"
+                        Command="{Binding CompareDorogaCommand}" />
+                <Button Content="Очистить дороги"
+                        Padding="15,8"
+                        Command="{Binding ClearDorogaCommand}" />
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- Рабочая область -->
+        <ContentControl Grid.Row="1" Grid.ColumnSpan="2" Margin="10" />
+
+    </Grid>
 </Window>

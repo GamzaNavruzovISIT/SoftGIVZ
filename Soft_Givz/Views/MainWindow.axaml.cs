@@ -1,11 +1,14 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 
-namespace Soft_Givz.Views;
-
-public partial class MainWindow : Window
+namespace Soft_Givz.Views
 {
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
     }
 }
