@@ -38,9 +38,60 @@ public class MergeService
     }
 
     // ============================================================
-    // СЛИЯНИЕ ДОРОГ
+    // ДОРОГИ
     // ============================================================
-    public async Task<MergeResult> MergeDorogaAsync()
+    public Task<MergeResult> MergeDorogaAsync() =>
+        MergeGenericAsync(
+            src1: "doroga1", src2: "doroga2", dst: "doroga",
+            allColumns: DorogaColumns,
+            keyColumns: new[] { "d_gmd", "d_pach", "d_nakl" },
+            label: "накладная");
+
+    public Task ClearDorogaTablesAsync() =>
+        ClearTablesAsync("doroga1", "doroga2");
+
+    // ============================================================
+    // ВЕДОМОСТИ
+    // ============================================================
+    public Task<MergeResult> MergeVedomAsync() =>
+        MergeGenericAsync(
+            src1: "vedom1", src2: "vedom2", dst: "vedom",
+            allColumns: VedomColumns,
+            keyColumns: new[] { "v_gmd", "v_pach", "v_nved" },
+            label: "ведомость");
+
+    public Task ClearVedomTablesAsync() =>
+        ClearTablesAsync("vedom1", "vedom2");
+
+    // ============================================================
+    // ОЧИСТКА ОБЩАЯ
+    // ============================================================
+    public async Task ClearTablesAsync(string t1, string t2)
+    {
+        using var conn = _factory.Create();
+        conn.Open();
+        using var tx = conn.BeginTransaction();
+        try
+        {
+            await conn.ExecuteAsync(
+                $"TRUNCATE TABLE {Schema}.{t1} RESTART IDENTITY", transaction: tx);
+            await conn.ExecuteAsync(
+                $"TRUNCATE TABLE {Schema}.{t2} RESTART IDENTITY", transaction: tx);
+            tx.Commit();
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    // ============================================================
+    // ОБЩАЯ ЛОГИКА СЛИЯНИЯ
+    // ============================================================
+    private async Task<MergeResult> MergeGenericAsync(
+        string src1, string src2, string dst,
+        string[] allColumns, string[] keyColumns, string label)
     {
         using var conn = _factory.Create();
         conn.Open();
@@ -48,79 +99,76 @@ public class MergeService
 
         try
         {
-            var cols = string.Join(", ", DorogaColumns);
+            var cols = string.Join(", ", allColumns);
 
-            // 1. Читаем обе таблицы
             var rows1 = (await conn.QueryAsync(
-                $"SELECT {cols} FROM {Schema}.doroga1", transaction: tx)).ToList();
+                $"SELECT {cols} FROM {Schema}.{src1}", transaction: tx)).ToList();
             var rows2 = (await conn.QueryAsync(
-                $"SELECT {cols} FROM {Schema}.doroga2", transaction: tx)).ToList();
+                $"SELECT {cols} FROM {Schema}.{src2}", transaction: tx)).ToList();
 
             var errors = new List<string>();
             var toMerge = new List<IDictionary<string, object?>>();
 
-            // 2. Прямой проход
+            // Прямой проход
             foreach (var row1 in rows1)
             {
                 var dict1 = (IDictionary<string, object?>)row1;
-                var key1 = BuildKey(dict1, KeyColumns);
+                var key1 = BuildKey(dict1, keyColumns);
 
                 var pair = rows2
                     .Cast<IDictionary<string, object?>>()
-                    .FirstOrDefault(r => BuildKey(r, KeyColumns) == key1);
+                    .FirstOrDefault(r => BuildKey(r, keyColumns) == key1);
 
                 if (pair == null)
                 {
-                    errors.Add($"Нет пары для накладной {FormatKey(dict1, KeyLabelColumns)}");
+                    errors.Add($"Нет пары для {label} {FormatKey(dict1, keyColumns)}");
                     continue;
                 }
 
-                var compareCols = DorogaColumns
-                    .Where(c => !KeyColumns.Contains(c))
+                var compareCols = allColumns
+                    .Where(c => !keyColumns.Contains(c))
                     .ToArray();
 
                 var diff = CompareRows(dict1, pair, compareCols);
                 if (diff.Count > 0)
                 {
                     errors.Add(
-                        $"Накладная {FormatKey(dict1, KeyLabelColumns)}: " +
+                        $"{label} {FormatKey(dict1, keyColumns)}: " +
                         $"расхождения в полях: {string.Join(", ", diff)}");
                     continue;
                 }
 
-                // Данные берём из doroga1 — они идентичны doroga2 (сверили по всем полям)
                 toMerge.Add(dict1);
             }
 
-            // 3. Обратный проход — строки из 2, которых нет в 1
+            // Обратный проход
             foreach (var row2 in rows2)
             {
                 var dict2 = (IDictionary<string, object?>)row2;
-                var key2 = BuildKey(dict2, KeyColumns);
+                var key2 = BuildKey(dict2, keyColumns);
 
                 bool found = rows1
                     .Cast<IDictionary<string, object?>>()
-                    .Any(r => BuildKey(r, KeyColumns) == key2);
+                    .Any(r => BuildKey(r, keyColumns) == key2);
 
                 if (!found)
                 {
                     errors.Add(
-                        $"Нет пары для накладной {FormatKey(dict2, KeyLabelColumns)} " +
-                        $"(в источнике 2)");
+                        $"Нет пары для {label} {FormatKey(dict2, keyColumns)} (в источнике 2)");
                 }
             }
 
-            // 4. Если ошибки — откат
+            // Если есть ошибки — откат
             if (errors.Count > 0)
             {
                 tx.Rollback();
                 return MergeResult.Fail(errors);
             }
 
-            // 5. Сливаем в doroga
-            var paramNames = DorogaColumns.Select(c => "@" + c).ToArray();
+            // Слияние
+            var paramNames = allColumns.Select(c => "@" + c).ToArray();
             var insertSql = $@"
-                INSERT INTO {Schema}.doroga ({cols})
+                INSERT INTO {Schema}.{dst} ({cols})
                 VALUES ({string.Join(", ", paramNames)})";
 
             foreach (var row in toMerge)
@@ -128,11 +176,11 @@ public class MergeService
                 await conn.ExecuteAsync(insertSql, (object)row, tx);
             }
 
-            // 6. Чистим источники
+            // Очистка
             await conn.ExecuteAsync(
-                $"TRUNCATE TABLE {Schema}.doroga1 RESTART IDENTITY", transaction: tx);
+                $"TRUNCATE TABLE {Schema}.{src1} RESTART IDENTITY", transaction: tx);
             await conn.ExecuteAsync(
-                $"TRUNCATE TABLE {Schema}.doroga2 RESTART IDENTITY", transaction: tx);
+                $"TRUNCATE TABLE {Schema}.{src2} RESTART IDENTITY", transaction: tx);
 
             tx.Commit();
             return MergeResult.Ok(toMerge.Count);
@@ -145,34 +193,8 @@ public class MergeService
     }
 
     // ============================================================
-    // ОЧИСТКА
-    // ============================================================
-    public async Task ClearDorogaTablesAsync()
-    {
-        using var conn = _factory.Create();
-        conn.Open();
-        using var tx = conn.BeginTransaction();
-        try
-        {
-            await conn.ExecuteAsync(
-                $"TRUNCATE TABLE {Schema}.doroga1 RESTART IDENTITY", transaction: tx);
-            await conn.ExecuteAsync(
-                $"TRUNCATE TABLE {Schema}.doroga2 RESTART IDENTITY", transaction: tx);
-            tx.Commit();
-        }
-        catch
-        {
-            tx.Rollback();
-            throw;
-        }
-    }
-
-    // ============================================================
     // СПИСКИ ПОЛЕЙ
     // ============================================================
-
-    private static readonly string[] KeyColumns = { "d_gmd", "d_pach", "d_nakl" };
-    private static readonly string[] KeyLabelColumns = { "d_gmd", "d_pach", "d_nakl" };
 
     private static readonly string[] DorogaColumns = new[]
     {
@@ -180,6 +202,15 @@ public class MergeService
         "d_otp_v", "d_stotp", "d_stnazn", "d_gruz",
         "d_psila", "d_ves", "d_poluhat", "d_data",
         "d_vag1", "d_vag2", "d_vag3", "d_vag4"
+    };
+
+    private static readonly string[] VedomColumns = new[]
+    {
+        "v_gmd", "v_pach", "v_stan", "v_nved", "v_tiploc", "v_otp",
+        "v_uchastok", "v_gruz",
+        "v_kvag1", "v_sokr1", "v_kvag2", "v_sokr2",
+        "v_kvag3", "v_sokr3", "v_kvag4", "v_sokr4",
+        "v_prostoi", "v_trab", "v_data"
     };
 
     // ============================================================

@@ -32,13 +32,20 @@ public partial class App : Application
                     "Строка подключения 'DefaultConnection' не найдена в appsettings.json");
 
             var factory = new NpgsqlConnectionFactory(connStr);
+
             var doroga1Repo = new DorogaRepository(factory, "doroga1");
             var doroga2Repo = new DorogaRepository(factory, "doroga2");
+            var vedom1Repo = new VedomRepository(factory, "vedom1");
+            var vedom2Repo = new VedomRepository(factory, "vedom2");
+
             var mergeService = new MergeService(factory);
 
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(doroga1Repo, doroga2Repo, mergeService)
+                DataContext = new MainWindowViewModel(
+                    doroga1Repo, doroga2Repo,
+                    vedom1Repo, vedom2Repo,
+                    mergeService)
             };
         }
 

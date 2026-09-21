@@ -1,0 +1,136 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Soft_Givz.ViewModels"
+        x:Class="Soft_Givz.Views.VedomInputWindow"
+        x:DataType="vm:VedomInputViewModel"
+        Title="Ввод Ведомость 1"
+        Width="720" Height="760"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="20">
+
+        <!-- Верх: ГМД -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,15">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Год, Месяц, Декада:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Gmd}" IsReadOnly="True" Width="120" Background="#EEE"/>
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1">
+            <Grid ColumnDefinitions="240,*" RowSpacing="10"
+                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+
+                <!-- Row 0 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Номер пачки:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Pachka}" MaxLength="3"/>
+
+                <!-- Row 1 -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Станция:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding Stanciya}" MaxLength="3"/>
+
+                <!-- Row 2 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="№ ведомости:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding NomerVedomosti}" MaxLength="6"/>
+
+                <!-- Row 3 -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Тип локомотива:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding TipLokomotiva}" MaxLength="3"/>
+
+                <!-- Row 4 -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Отправитель:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding Otpravitel}" MaxLength="3"/>
+
+                <!-- Row 5 -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Участок:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding Uchastok}" MaxLength="4"/>
+
+                <!-- Row 6 -->
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Груз:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="6" Grid.Column="1" Text="{Binding Gruz}" MaxLength="3"/>
+
+                <!-- Row 7 — заголовок -->
+                <TextBlock Grid.Row="7" Grid.ColumnSpan="2"
+                           Text="Типы вагонов:"
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,0"/>
+
+                <!-- Row 8 -->
+                <Grid Grid.Row="8" Grid.ColumnSpan="2"
+                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      Margin="0,4,0,0">
+                    <TextBlock Grid.Column="0" Text="1:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="1" Text="{Binding Vagon1}" MaxLength="2" Watermark="Кол-во"/>
+                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Text="{Binding Sokr1}" MaxLength="10"/>
+                </Grid>
+
+                <!-- Row 9 -->
+                <Grid Grid.Row="9" Grid.ColumnSpan="2"
+                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      Margin="0,4,0,0">
+                    <TextBlock Grid.Column="0" Text="2:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="1" Text="{Binding Vagon2}" MaxLength="2" Watermark="Кол-во"/>
+                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Text="{Binding Sokr2}" MaxLength="10"/>
+                </Grid>
+
+                <!-- Row 10 -->
+                <Grid Grid.Row="10" Grid.ColumnSpan="2"
+                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      Margin="0,4,0,0">
+                    <TextBlock Grid.Column="0" Text="3:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="1" Text="{Binding Vagon3}" MaxLength="2" Watermark="Кол-во"/>
+                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Text="{Binding Sokr3}" MaxLength="10"/>
+                </Grid>
+
+                <!-- Row 11 -->
+                <Grid Grid.Row="11" Grid.ColumnSpan="2"
+                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      Margin="0,4,0,0">
+                    <TextBlock Grid.Column="0" Text="4:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="1" Text="{Binding Vagon4}" MaxLength="2" Watermark="Кол-во"/>
+                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Text="{Binding Sokr4}" MaxLength="10"/>
+                </Grid>
+
+                <!-- Row 12 -->
+                <TextBlock Grid.Row="12" Grid.Column="0" Text="Время простоя:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,10,10,0"/>
+                <TextBox   Grid.Row="12" Grid.Column="1" Text="{Binding VremyaProstoya}" MaxLength="10" Margin="0,10,0,0"/>
+
+                <!-- Row 13 -->
+                <TextBlock Grid.Row="13" Grid.Column="0" Text="Время работы:"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="13" Grid.Column="1" Text="{Binding VremyaRaboty}" MaxLength="10"/>
+
+                <!-- Row 14 -->
+                <TextBlock Grid.Row="14" Grid.Column="0" Text="Дата (ДДММ):"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="14" Grid.Column="1" Text="{Binding DataDokumenta}"
+                           MaxLength="4" Watermark="ДДММ"/>
+
+            </Grid>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}"
+                   Foreground="DarkRed" Margin="0,10,0,0"
+                   TextWrapping="Wrap"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Spacing="10" Margin="0,10,0,0">
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" Padding="15,8"/>
+            <Button Content="Отмена"    Command="{Binding CancelCommand}" Padding="15,8"/>
+        </StackPanel>
+
+    </Grid>
+</Window>

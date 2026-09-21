@@ -16,32 +16,65 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly DorogaRepository _doroga1Repo;
     private readonly DorogaRepository _doroga2Repo;
+    private readonly VedomRepository _vedom1Repo;
+    private readonly VedomRepository _vedom2Repo;
     private readonly MergeService _mergeService;
 
     public MainWindowViewModel(
         DorogaRepository doroga1Repo,
         DorogaRepository doroga2Repo,
+        VedomRepository vedom1Repo,
+        VedomRepository vedom2Repo,
         MergeService mergeService)
     {
         _doroga1Repo = doroga1Repo;
         _doroga2Repo = doroga2Repo;
+        _vedom1Repo = vedom1Repo;
+        _vedom2Repo = vedom2Repo;
         _mergeService = mergeService;
     }
 
-    // Пустой конструктор — для дизайнера XAML
-    public MainWindowViewModel() : this(null!, null!, null!) { }
+    public MainWindowViewModel() : this(null!, null!, null!, null!, null!) { }
 
     [ObservableProperty] private bool _isEntryMenuVisible;
 
-    // ===== Верхняя кнопка =====
     [RelayCommand]
     private void ToggleEntryMenu() => IsEntryMenuVisible = !IsEntryMenuVisible;
 
-    // ===== Ведомости (пока заглушки) =====
-    [RelayCommand] private void EnterVedomost1() { }
-    [RelayCommand] private void EnterVedomost2() { }
-    [RelayCommand] private void CompareVedom() { }
-    [RelayCommand] private void ClearVedom() { }
+    // ===== Ведомости =====
+    [RelayCommand]
+    private void EnterVedomost1() => OpenVedomInput("Ввод Ведомость 1", _vedom1Repo);
+
+    [RelayCommand]
+    private void EnterVedomost2() => OpenVedomInput("Ввод Ведомость 2", _vedom2Repo);
+
+    [RelayCommand]
+    private async Task CompareVedomAsync()
+    {
+        try
+        {
+            var result = await _mergeService.MergeVedomAsync();
+            ShowMergeResult("Сравнение ведомостей", result);
+        }
+        catch (Exception ex)
+        {
+            ShowInfo("Ошибка", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ClearVedomAsync()
+    {
+        try
+        {
+            await _mergeService.ClearVedomTablesAsync();
+            ShowInfo("Очистка", "Таблицы vedom1 и vedom2 очищены.");
+        }
+        catch (Exception ex)
+        {
+            ShowInfo("Ошибка", ex.Message);
+        }
+    }
 
     // ===== Дороги =====
     [RelayCommand]
@@ -78,7 +111,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // ===== Открытие окна ввода =====
+    // ===== Открытие окон ввода =====
     private void OpenDorogaInput(string title, DorogaRepository repo)
     {
         var vm = new DorogaInputViewModel(repo);
@@ -87,7 +120,15 @@ public partial class MainWindowViewModel : ViewModelBase
         window.Show();
     }
 
-    // ===== Диалог с ошибками слияния =====
+    private void OpenVedomInput(string title, VedomRepository repo)
+    {
+        var vm = new VedomInputViewModel(repo);
+        var window = new VedomInputWindow { DataContext = vm, Title = title };
+        vm.SaveSucceeded += () => window.Close();
+        window.Show();
+    }
+
+    // ===== Диалоги =====
     private void ShowMergeResult(string title, MergeResult result)
     {
         if (result.Success)
@@ -138,7 +179,6 @@ public partial class MainWindowViewModel : ViewModelBase
         win.ShowDialog(GetMainWindow());
     }
 
-    // ===== Информационный диалог =====
     private void ShowInfo(string title, string message)
     {
         var okButton = new Button
