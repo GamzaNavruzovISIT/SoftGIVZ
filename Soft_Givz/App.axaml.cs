@@ -39,13 +39,15 @@ public partial class App : Application
             var vedom2Repo = new VedomRepository(factory, "vedom2");
 
             var mergeService = new MergeService(factory);
+            var universalRepo = new UniversalRepository(factory);
 
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel(
                     doroga1Repo, doroga2Repo,
                     vedom1Repo, vedom2Repo,
-                    mergeService)
+                    mergeService,
+                    universalRepo)
             };
         }
 

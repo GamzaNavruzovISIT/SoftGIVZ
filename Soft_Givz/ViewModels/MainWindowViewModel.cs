@@ -19,22 +19,25 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly VedomRepository _vedom1Repo;
     private readonly VedomRepository _vedom2Repo;
     private readonly MergeService _mergeService;
+    private readonly UniversalRepository _universalRepo;
 
     public MainWindowViewModel(
         DorogaRepository doroga1Repo,
         DorogaRepository doroga2Repo,
         VedomRepository vedom1Repo,
         VedomRepository vedom2Repo,
-        MergeService mergeService)
+        MergeService mergeService,
+        UniversalRepository universalRepo)
     {
         _doroga1Repo = doroga1Repo;
         _doroga2Repo = doroga2Repo;
         _vedom1Repo = vedom1Repo;
         _vedom2Repo = vedom2Repo;
         _mergeService = mergeService;
+        _universalRepo = universalRepo;
     }
 
-    public MainWindowViewModel() : this(null!, null!, null!, null!, null!) { }
+    public MainWindowViewModel() : this(null!, null!, null!, null!, null!, null!) { }
 
     [ObservableProperty] private bool _isEntryMenuVisible;
 
@@ -109,6 +112,42 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ShowInfo("Ошибка", ex.Message);
         }
+    }
+
+    // ===== Работа с БД =====
+    [RelayCommand]
+    private async Task OpenDbEditorAsync()
+    {
+        // 1. Открываем окно выбора таблицы
+        var selectWindow = new TableSelectWindow();
+        var table = await selectWindow.ShowDialog<string?>(GetMainWindow());
+
+        if (string.IsNullOrEmpty(table)) return;
+
+        // 2. Определяем список колонок по имени таблицы
+        string[] columns = table.StartsWith("doroga")
+            ? new[]
+            {
+                "id", "d_gmd", "d_pach", "d_nakl", "d_otp_v", "d_stotp", "d_stnazn",
+                "d_gruz", "d_psila", "d_ves", "d_poluhat", "d_data",
+                "d_vag1", "d_vag2", "d_vag3", "d_vag4",
+                "d_data_vv", "d_time_vv"
+            }
+            : new[]
+            {
+                "id", "v_gmd", "v_pach", "v_stan", "v_nved", "v_tiploc", "v_otp",
+                "v_uchastok", "v_gruz",
+                "v_kvag1", "v_sokr1", "v_kvag2", "v_sokr2",
+                "v_kvag3", "v_sokr3", "v_kvag4", "v_sokr4",
+                "v_prostoi", "v_trab", "v_data",
+                "v_data_vv", "v_time_vv"
+            };
+
+        // 3. Открываем окно с гридом
+        var editorVm = new TableEditorViewModel(_universalRepo, table, columns);
+        var editorWindow = new TableEditorWindow { DataContext = editorVm };
+        await editorVm.LoadAsync();
+        editorWindow.Show();
     }
 
     // ===== Открытие окон ввода =====

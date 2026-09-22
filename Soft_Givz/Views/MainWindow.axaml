@@ -4,16 +4,22 @@
         x:Class="Soft_Givz.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Учет ПТЖТ"
-        Width="1000" Height="700">
+        Width="1100" Height="700">
 
     <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*">
 
-        <!-- Верхняя левая кнопка -->
-        <Button Grid.Row="0" Grid.Column="0"
-                Content="Ввод/корректив данных"
-                Margin="10" Padding="15,8"
-                HorizontalAlignment="Left"
-                Command="{Binding ToggleEntryMenuCommand}" />
+        <!-- Верхняя левая панель: две кнопки -->
+        <StackPanel Grid.Row="0" Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    Margin="10">
+            <Button Content="Ввод/корректив данных"
+                    Padding="15,8"
+                    Command="{Binding ToggleEntryMenuCommand}" />
+            <Button Content="Работа с БД"
+                    Padding="15,8"
+                    Command="{Binding OpenDbEditorCommand}" />
+        </StackPanel>
 
         <!-- Блок кнопок справа -->
         <StackPanel Grid.Row="0" Grid.Column="1"
