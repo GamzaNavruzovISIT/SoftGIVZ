@@ -14,9 +14,9 @@ public partial class VedomInputViewModel : ViewModelBase
 {
     private readonly VedomRepository _repo;
     private readonly VagonRepository _vagonRepo;
+    private readonly OtpravitRepository _otpravitRepo;
 
     [ObservableProperty] private string _gmd = "";
-
     [ObservableProperty] private string _pachka = "";
     [ObservableProperty] private string _stanciya = "";
     [ObservableProperty] private string _nomerVedomosti = "";
@@ -25,16 +25,12 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _uchastok = "";
     [ObservableProperty] private string _gruz = "";
 
-    // ===== Вагоны =====
     [ObservableProperty] private string _vagon1 = "";
     [ObservableProperty] private Vagon? _selectedSokr1;
-
     [ObservableProperty] private string _vagon2 = "";
     [ObservableProperty] private Vagon? _selectedSokr2;
-
     [ObservableProperty] private string _vagon3 = "";
     [ObservableProperty] private Vagon? _selectedSokr3;
-
     [ObservableProperty] private string _vagon4 = "";
     [ObservableProperty] private Vagon? _selectedSokr4;
 
@@ -43,23 +39,24 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _vremyaProstoya = "";
     [ObservableProperty] private string _vremyaRaboty = "";
     [ObservableProperty] private string _dataDokumenta = "";
-
     [ObservableProperty] private string _statusMessage = "";
 
     public event Action? SaveSucceeded;
     public Func<string, Task<bool>>? ConfirmSaveAnyway;
+    public Func<string, Task<bool>>? ConfirmUnknownOtpravitel;
 
-    public VedomInputViewModel(VedomRepository repo, VagonRepository vagonRepo)
+    public VedomInputViewModel(VedomRepository repo, VagonRepository vagonRepo, OtpravitRepository otpravitRepo)
     {
         _repo = repo;
         _vagonRepo = vagonRepo;
+        _otpravitRepo = otpravitRepo;
 
         var now = DateTime.Now;
         int dekada = (now.Day - 1) / 10 + 1;
         Gmd = $"{now:yy}{now:MM}{dekada}";
     }
 
-    public VedomInputViewModel() : this(null!, null!) { }
+    public VedomInputViewModel() : this(null!, null!, null!) { }
 
     public async Task LoadVagonsAsync()
     {
@@ -78,38 +75,46 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        // === 1. Проверка обязательных полей ===
         var missing = GetMissingRequiredFields();
         if (missing.Count > 0)
         {
-            var message =
-                "Не заполнены обязательные поля:\n\n• " +
-                string.Join("\n• ", missing) +
-                "\n\nВсё равно сохранить?";
+            var message = "Не заполнены обязательные поля:\n\n• " +
+                          string.Join("\n• ", missing) +
+                          "\n\nВсё равно сохранить?";
 
             bool saveAnyway = ConfirmSaveAnyway != null
                 ? await ConfirmSaveAnyway(message)
                 : false;
 
-            if (!saveAnyway)
-                return;
+            if (!saveAnyway) return;
         }
 
-        // === 2. Дата ДДММ ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
             StatusMessage = dataError ?? "Ошибка в дате документа";
             return;
         }
 
-        // === 3. Вагоны ===
         if (!TryValidateVagons(out string? vagonError))
         {
             StatusMessage = vagonError ?? "Ошибка в вагонах";
             return;
         }
 
-        // === 4. Сохранение ===
+        if (!string.IsNullOrWhiteSpace(Otpravitel))
+        {
+            bool exists = await _otpravitRepo.ExistsAsync(Otpravitel.Trim());
+            if (!exists)
+            {
+                var message = $"Код отправителя «{Otpravitel}» отсутствует в справочнике.\n\nВсё равно сохранить?";
+                bool saveAnyway = ConfirmUnknownOtpravitel != null
+                    ? await ConfirmUnknownOtpravitel(message)
+                    : false;
+
+                if (!saveAnyway) return;
+            }
+        }
+
         try
         {
             var model = new Vedom1
@@ -154,7 +159,6 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
 
-    // ===== Обязательные поля =====
     private List<string> GetMissingRequiredFields()
     {
         var missing = new List<string>();
@@ -167,7 +171,7 @@ public partial class VedomInputViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(Otpravitel)) missing.Add("Отправитель");
         if (string.IsNullOrWhiteSpace(Uchastok)) missing.Add("Участок");
         if (string.IsNullOrWhiteSpace(Gruz)) missing.Add("Груз");
-        if (string.IsNullOrWhiteSpace(DataDokumenta)) missing.Add("Дата (ДДММ)");   // ← новое
+        if (string.IsNullOrWhiteSpace(DataDokumenta)) missing.Add("Дата (ДДММ)");
 
         return missing;
     }
@@ -175,7 +179,6 @@ public partial class VedomInputViewModel : ViewModelBase
     private bool TryValidateVagons(out string? error)
     {
         error = null;
-
         var pairs = new (string kol, Vagon? tip, int row)[]
         {
             (Vagon1, SelectedSokr1, 1),
@@ -195,14 +198,12 @@ public partial class VedomInputViewModel : ViewModelBase
                 error = $"Строка вагона {row}: указано количество, но не выбран тип";
                 return false;
             }
-
             if (hasTip && !hasKol)
             {
                 error = $"Строка вагона {row}: выбран тип, но не указано количество";
                 return false;
             }
         }
-
         return true;
     }
 
@@ -233,7 +234,6 @@ public partial class VedomInputViewModel : ViewModelBase
             error = $"В месяце {month:00} нет дня {day:00}";
             return false;
         }
-
         return true;
     }
 

@@ -41,6 +41,7 @@ public partial class App : Application
             var mergeService = new MergeService(factory);
             var universalRepo = new UniversalRepository(factory);
             var vagonRepo = new VagonRepository(factory);
+            var otpravitRepo = new OtpravitRepository(factory);
 
             desktop.MainWindow = new MainWindow
             {
@@ -49,7 +50,8 @@ public partial class App : Application
                     vedom1Repo, vedom2Repo,
                     mergeService,
                     universalRepo,
-                    vagonRepo)
+                    vagonRepo,
+                    otpravitRepo)
             };
         }
 

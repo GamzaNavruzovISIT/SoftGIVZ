@@ -22,17 +22,18 @@ public partial class DorogaInputWindow : Window
         if (_subscribedVm != null)
         {
             _subscribedVm.ConfirmSaveAnyway = null;
+            _subscribedVm.ConfirmUnknownOtpravitel = null;
         }
 
         if (DataContext is DorogaInputViewModel vm)
         {
             _subscribedVm = vm;
-            vm.ConfirmSaveAnyway = ShowConfirmSaveAnywayDialog;
+            vm.ConfirmSaveAnyway = ShowConfirmDialog;
+            vm.ConfirmUnknownOtpravitel = ShowConfirmDialog;
         }
     }
 
-    // ====== Диалог «Не заполнены поля. Всё равно сохранить? Да/Нет» ======
-    private async Task<bool> ShowConfirmSaveAnywayDialog(string message)
+    private async Task<bool> ShowConfirmDialog(string message)
     {
         var result = false;
 

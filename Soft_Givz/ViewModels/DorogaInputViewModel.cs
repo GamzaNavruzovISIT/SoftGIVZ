@@ -12,6 +12,7 @@ namespace Soft_Givz.ViewModels;
 public partial class DorogaInputViewModel : ViewModelBase
 {
     private readonly DorogaRepository _repo;
+    private readonly OtpravitRepository _otpravitRepo;
 
     [ObservableProperty] private string _gmd = "";
     [ObservableProperty] private string _pachka = "";
@@ -26,7 +27,7 @@ public partial class DorogaInputViewModel : ViewModelBase
     [ObservableProperty] private string _poluchatel = "";
     [ObservableProperty] private string _dataDokumenta = "";
 
-    // ===== Вагоны (4 поля в строчку) =====
+    // ===== Вагоны =====
     [ObservableProperty] private string _vagon1 = "";
     [ObservableProperty] private string _vagon2 = "";
     [ObservableProperty] private string _vagon3 = "";
@@ -36,22 +37,24 @@ public partial class DorogaInputViewModel : ViewModelBase
 
     public event Action? SaveSucceeded;
     public Func<string, Task<bool>>? ConfirmSaveAnyway;
+    public Func<string, Task<bool>>? ConfirmUnknownOtpravitel;
 
-    public DorogaInputViewModel(DorogaRepository repo)
+    public DorogaInputViewModel(DorogaRepository repo, OtpravitRepository otpravitRepo)
     {
         _repo = repo;
+        _otpravitRepo = otpravitRepo;
 
         var now = DateTime.Now;
         int dekada = (now.Day - 1) / 10 + 1;
         Gmd = $"{now:yy}{now:MM}{dekada}";
     }
 
-    public DorogaInputViewModel() : this(null!) { }
+    public DorogaInputViewModel() : this(null!, null!) { }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        // === 1. Проверка обязательных полей ===
+        // === 1. Обязательные поля ===
         var missing = GetMissingRequiredFields();
         if (missing.Count > 0)
         {
@@ -68,14 +71,33 @@ public partial class DorogaInputViewModel : ViewModelBase
                 return;
         }
 
-        // === 2. Дата ДДММ ===
+        // === 2. Дата ДДММ (жёсткая) ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
             StatusMessage = dataError ?? "Ошибка в дате документа";
             return;
         }
 
-        // === 3. Сохранение ===
+        // === 3. Проверка отправителя по справочнику ===
+        if (!string.IsNullOrWhiteSpace(Otpravitel))
+        {
+            bool exists = await _otpravitRepo.ExistsAsync(Otpravitel.Trim());
+            if (!exists)
+            {
+                var message =
+                    $"Код отправителя «{Otpravitel}» отсутствует в справочнике.\n\n" +
+                    "Всё равно сохранить?";
+
+                bool saveAnyway = ConfirmUnknownOtpravitel != null
+                    ? await ConfirmUnknownOtpravitel(message)
+                    : false;
+
+                if (!saveAnyway)
+                    return;
+            }
+        }
+
+        // === 4. Сохранение ===
         try
         {
             var model = new Doroga1
@@ -101,7 +123,6 @@ public partial class DorogaInputViewModel : ViewModelBase
                 DTimeVv = DateTime.Now.ToString("HH:mm:ss")
             };
 
-            // ChisloMest пока НЕ пишется в БД
             _ = ChisloMest;
 
             await _repo.InsertAsync(model);
@@ -118,7 +139,6 @@ public partial class DorogaInputViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
 
-    // ===== Обязательные поля =====
     private List<string> GetMissingRequiredFields()
     {
         var missing = new List<string>();
@@ -137,7 +157,6 @@ public partial class DorogaInputViewModel : ViewModelBase
         return missing;
     }
 
-    // ===== Валидация даты ДДММ =====
     private static bool TryValidateDataDokumenta(string input, out string? error)
     {
         error = null;

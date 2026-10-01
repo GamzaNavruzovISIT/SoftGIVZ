@@ -21,6 +21,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly MergeService _mergeService;
     private readonly UniversalRepository _universalRepo;
     private readonly VagonRepository _vagonRepo;
+    private readonly OtpravitRepository _otpravitRepo;
 
     public MainWindowViewModel(
         DorogaRepository doroga1Repo,
@@ -29,7 +30,8 @@ public partial class MainWindowViewModel : ViewModelBase
         VedomRepository vedom2Repo,
         MergeService mergeService,
         UniversalRepository universalRepo,
-        VagonRepository vagonRepo)
+        VagonRepository vagonRepo,
+        OtpravitRepository otpravitRepo)
     {
         _doroga1Repo = doroga1Repo;
         _doroga2Repo = doroga2Repo;
@@ -38,9 +40,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _mergeService = mergeService;
         _universalRepo = universalRepo;
         _vagonRepo = vagonRepo;
+        _otpravitRepo = otpravitRepo;
     }
 
-    public MainWindowViewModel() : this(null!, null!, null!, null!, null!, null!, null!) { }
+    public MainWindowViewModel()
+        : this(null!, null!, null!, null!, null!, null!, null!, null!) { }
 
     [ObservableProperty] private bool _isEntryMenuVisible;
 
@@ -153,7 +157,7 @@ public partial class MainWindowViewModel : ViewModelBase
     // ===== Открытие окон ввода =====
     private void OpenDorogaInput(string title, DorogaRepository repo)
     {
-        var vm = new DorogaInputViewModel(repo);
+        var vm = new DorogaInputViewModel(repo, _otpravitRepo);
         var window = new DorogaInputWindow { DataContext = vm, Title = title };
         vm.SaveSucceeded += () => window.Close();
         window.Show();
@@ -161,13 +165,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OpenVedomInput(string title, VedomRepository repo)
     {
-        var vm = new VedomInputViewModel(repo, _vagonRepo);
+        var vm = new VedomInputViewModel(repo, _vagonRepo, _otpravitRepo);
         var window = new VedomInputWindow { DataContext = vm, Title = title };
         vm.SaveSucceeded += () => window.Close();
-
-        // Загружаем справочник вагонов асинхронно
         _ = vm.LoadVagonsAsync();
-
         window.Show();
     }
 
