@@ -64,7 +64,16 @@ public partial class VedomInputViewModel : ViewModelBase
         {
             var list = await _vagonRepo.GetAllAsync();
             Vagons.Clear();
-            foreach (var v in list) Vagons.Add(v);
+
+            Vagons.Add(new Vagon { VagTip = "", VagSokr = null, VagName = null });
+
+            foreach (var v in list)
+                Vagons.Add(v);
+
+            SelectedSokr1 = Vagons[0];
+            SelectedSokr2 = Vagons[0];
+            SelectedSokr3 = Vagons[0];
+            SelectedSokr4 = Vagons[0];
         }
         catch (Exception ex)
         {
@@ -75,11 +84,12 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
-        var missing = GetMissingRequiredFields();
-        if (missing.Count > 0)
+        // === 1. Все проблемы разом: обязательные поля + вагоны ===
+        var issues = GetValidationIssues();
+        if (issues.Count > 0)
         {
-            var message = "Не заполнены обязательные поля:\n\n• " +
-                          string.Join("\n• ", missing) +
+            var message = "Обнаружены проблемы:\n\n• " +
+                          string.Join("\n• ", issues) +
                           "\n\nВсё равно сохранить?";
 
             bool saveAnyway = ConfirmSaveAnyway != null
@@ -89,18 +99,14 @@ public partial class VedomInputViewModel : ViewModelBase
             if (!saveAnyway) return;
         }
 
+        // === 2. Дата ДДММ (жёсткая) ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
             StatusMessage = dataError ?? "Ошибка в дате документа";
             return;
         }
 
-        if (!TryValidateVagons(out string? vagonError))
-        {
-            StatusMessage = vagonError ?? "Ошибка в вагонах";
-            return;
-        }
-
+        // === 3. Отправитель ===
         if (!string.IsNullOrWhiteSpace(Otpravitel))
         {
             bool exists = await _otpravitRepo.ExistsAsync(Otpravitel.Trim());
@@ -115,6 +121,7 @@ public partial class VedomInputViewModel : ViewModelBase
             }
         }
 
+        // === 4. Сохранение ===
         try
         {
             var model = new Vedom1
@@ -129,13 +136,13 @@ public partial class VedomInputViewModel : ViewModelBase
                 VGruz = NullIfEmpty(Gruz),
 
                 VKvag1 = ParseInt(Vagon1),
-                VSokr1 = SelectedSokr1?.VagSokr,
+                VSokr1 = GetSelectedSokr(SelectedSokr1),
                 VKvag2 = ParseInt(Vagon2),
-                VSokr2 = SelectedSokr2?.VagSokr,
+                VSokr2 = GetSelectedSokr(SelectedSokr2),
                 VKvag3 = ParseInt(Vagon3),
-                VSokr3 = SelectedSokr3?.VagSokr,
+                VSokr3 = GetSelectedSokr(SelectedSokr3),
                 VKvag4 = ParseInt(Vagon4),
-                VSokr4 = SelectedSokr4?.VagSokr,
+                VSokr4 = GetSelectedSokr(SelectedSokr4),
 
                 VProstoi = ParseDecimal(VremyaProstoya),
                 VTrab = ParseDecimal(VremyaRaboty),
@@ -159,26 +166,23 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
 
-    private List<string> GetMissingRequiredFields()
+    // ====== Список всех проблем: пустые обязательные поля + пары вагонов ======
+    private List<string> GetValidationIssues()
     {
-        var missing = new List<string>();
+        var issues = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(Gmd)) missing.Add("Год, Месяц, Декада (ГМД)");
-        if (string.IsNullOrWhiteSpace(Pachka)) missing.Add("Номер пачки");
-        if (string.IsNullOrWhiteSpace(Stanciya)) missing.Add("Станция");
-        if (string.IsNullOrWhiteSpace(NomerVedomosti)) missing.Add("№ ведомости");
-        if (string.IsNullOrWhiteSpace(TipLokomotiva)) missing.Add("Тип локомотива");
-        if (string.IsNullOrWhiteSpace(Otpravitel)) missing.Add("Отправитель");
-        if (string.IsNullOrWhiteSpace(Uchastok)) missing.Add("Участок");
-        if (string.IsNullOrWhiteSpace(Gruz)) missing.Add("Груз");
-        if (string.IsNullOrWhiteSpace(DataDokumenta)) missing.Add("Дата (ДДММ)");
+        // Обязательные поля
+        if (string.IsNullOrWhiteSpace(Gmd)) issues.Add("Не заполнено: Год, Месяц, Декада (ГМД)");
+        if (string.IsNullOrWhiteSpace(Pachka)) issues.Add("Не заполнено: Номер пачки");
+        if (string.IsNullOrWhiteSpace(Stanciya)) issues.Add("Не заполнено: Станция");
+        if (string.IsNullOrWhiteSpace(NomerVedomosti)) issues.Add("Не заполнено: № ведомости");
+        if (string.IsNullOrWhiteSpace(TipLokomotiva)) issues.Add("Не заполнено: Тип локомотива");
+        if (string.IsNullOrWhiteSpace(Otpravitel)) issues.Add("Не заполнено: Отправитель");
+        if (string.IsNullOrWhiteSpace(Uchastok)) issues.Add("Не заполнено: Участок");
+        if (string.IsNullOrWhiteSpace(Gruz)) issues.Add("Не заполнено: Груз");
+        if (string.IsNullOrWhiteSpace(DataDokumenta)) issues.Add("Не заполнено: Дата (ДДММ)");
 
-        return missing;
-    }
-
-    private bool TryValidateVagons(out string? error)
-    {
-        error = null;
+        // Пары вагонов
         var pairs = new (string kol, Vagon? tip, int row)[]
         {
             (Vagon1, SelectedSokr1, 1),
@@ -191,21 +195,20 @@ public partial class VedomInputViewModel : ViewModelBase
         {
             int? k = ParseInt(kol);
             bool hasKol = k.HasValue && k.Value > 0;
-            bool hasTip = tip != null;
+            bool hasTip = tip != null && !tip.IsEmpty;
 
             if (hasKol && !hasTip)
-            {
-                error = $"Строка вагона {row}: указано количество, но не выбран тип";
-                return false;
-            }
-            if (hasTip && !hasKol)
-            {
-                error = $"Строка вагона {row}: выбран тип, но не указано количество";
-                return false;
-            }
+                issues.Add($"Строка вагона {row}: указано количество, но не выбран тип");
+            else if (hasTip && !hasKol)
+                issues.Add($"Строка вагона {row}: выбран тип, но не указано количество");
         }
-        return true;
+
+        return issues;
     }
+
+    // Если выбран пустой элемент — вернём null (в БД уйдёт NULL)
+    private static string? GetSelectedSokr(Vagon? v)
+        => v == null || v.IsEmpty ? null : v.VagSokr;
 
     private static bool TryValidateDataDokumenta(string input, out string? error)
     {

@@ -19,6 +19,24 @@ public class Vagon
     public string? TarifGrup { get; set; }
     public DateTime? DataIzm { get; set; }
 
-    // Для отображения в ComboBox
-    public string Display => $"{VagSokr} — {VagName}";
+    // Для отображения в ComboBox. Если сокращение и имя пустые — пустая строка.
+    public string Display
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(VagSokr) && string.IsNullOrWhiteSpace(VagName))
+                return "";
+
+            if (string.IsNullOrWhiteSpace(VagSokr))
+                return VagName ?? "";
+
+            if (string.IsNullOrWhiteSpace(VagName))
+                return VagSokr;
+
+            return $"{VagSokr} — {VagName}";
+        }
+    }
+
+    // Признак «пустого» элемента (для валидации)
+    public bool IsEmpty => string.IsNullOrWhiteSpace(VagTip);
 }

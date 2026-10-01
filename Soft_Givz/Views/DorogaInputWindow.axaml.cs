@@ -1,9 +1,13 @@
-using System;
-using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Soft_Givz.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Soft_Givz.Views;
 
@@ -33,6 +37,70 @@ public partial class DorogaInputWindow : Window
         }
     }
 
+    // ====== Навигация по стрелкам вверх/вниз и Enter ======
+    private void OnWindowKeyDown(object? sender, KeyEventArgs e)
+    {
+        var focused = FocusManager?.GetFocusedElement();
+        if (focused is ComboBox cb && cb.IsDropDownOpen)
+            return;
+
+        if (e.Key == Key.Down || e.Key == Key.Enter)
+        {
+            MoveFocusForward();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Up)
+        {
+            MoveFocusBackward();
+            e.Handled = true;
+        }
+    }
+
+    private void MoveFocusForward()
+    {
+        var current = FocusManager?.GetFocusedElement() as Control;
+        if (current == null) return;
+
+        var all = GetFocusableControls();
+        int idx = all.IndexOf(current);
+
+        if (idx >= 0 && idx < all.Count - 1)
+            all[idx + 1].Focus();
+    }
+
+    private void MoveFocusBackward()
+    {
+        var current = FocusManager?.GetFocusedElement() as Control;
+        if (current == null) return;
+
+        var all = GetFocusableControls();
+        int idx = all.IndexOf(current);
+
+        if (idx > 0)
+            all[idx - 1].Focus();
+    }
+
+    private List<Control> GetFocusableControls()
+    {
+        var list = new List<Control>();
+        CollectFocusable(this, list);
+        return list;
+    }
+
+    private static void CollectFocusable(Visual parent, List<Control> list)
+    {
+        foreach (var child in parent.GetVisualChildren())
+        {
+            if (child is TextBox tb && !tb.IsReadOnly)
+                list.Add(tb);
+            else if (child is ComboBox cb)
+                list.Add(cb);
+
+            CollectFocusable(child, list);
+        }
+    }
+
+    // ====== Диалог Да/Нет ======
     private async Task<bool> ShowConfirmDialog(string message)
     {
         var result = false;

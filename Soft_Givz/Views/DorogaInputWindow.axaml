@@ -4,13 +4,13 @@
         x:Class="Soft_Givz.Views.DorogaInputWindow"
         x:DataType="vm:DorogaInputViewModel"
         Title="Ввод Дорога 1"
-        Width="680" Height="720"
+        Width="680" Height="760"
         WindowStartupLocation="CenterOwner"
-        CanResize="False">
+        CanResize="False"
+        KeyDown="OnWindowKeyDown">
 
     <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="20">
 
-        <!-- Верх: ГМД -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,15">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="Год, Месяц, Декада:" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -22,76 +22,63 @@
             <Grid ColumnDefinitions="240,*" RowSpacing="10"
                   RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
-                <!-- 0 -->
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Номер пачки:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Pachka}" MaxLength="3"/>
 
-                <!-- 1 -->
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Дубликат накладной:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding Nakl}" MaxLength="6"/>
 
-                <!-- 2 -->
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Отправитель:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding Otpravitel}" MaxLength="3"/>
 
-                <!-- 3 -->
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Станция отправления:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding StanciyaOtpravleniya}" MaxLength="3"/>
 
-                <!-- 4 -->
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Станция назначения:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding StanciyaNaznacheniya}" MaxLength="3"/>
 
-                <!-- 5 -->
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="Груз:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding Gruz}" MaxLength="3"/>
 
-                <!-- 6 -->
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="Подъёмная сила:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="6" Grid.Column="1" Text="{Binding PodyomnayaSila}" MaxLength="4"/>
 
-                <!-- 7 -->
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Вес:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="7" Grid.Column="1" Text="{Binding Ves}" MaxLength="4"/>
 
-                <!-- 8 — ЧИСЛО МЕСТ (только UI) -->
                 <TextBlock Grid.Row="8" Grid.Column="0" Text="Число мест:"
-                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBox   Grid.Row="8" Grid.Column="1" Text="{Binding ChisloMest}" MaxLength="4" Watermark="только UI. В базу не сохраняется"/>
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox   Grid.Row="8" Grid.Column="1" Text="{Binding ChisloMest}" MaxLength="4"/>
 
-                <!-- 9 -->
                 <TextBlock Grid.Row="9" Grid.Column="0" Text="Получатель:"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="9" Grid.Column="1" Text="{Binding Poluchatel}" MaxLength="3"/>
 
-                <!-- 10 -->
                 <TextBlock Grid.Row="10" Grid.Column="0" Text="Дата документа (ДДММ):"
                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBox   Grid.Row="10" Grid.Column="1" Text="{Binding DataDokumenta}"
-                           MaxLength="4" Watermark="ДДММ"/>
+                           MaxLength="4" PlaceholderText="ДДММ"/>
 
-                <!-- 11 — заголовок -->
                 <TextBlock Grid.Row="11" Grid.ColumnSpan="2"
                            Text="Типы вагонов:"
                            FontWeight="SemiBold"
                            Margin="0,10,0,0"/>
 
-                <!-- 12 — 4 поля в строчку -->
                 <Grid Grid.Row="12" Grid.ColumnSpan="2"
                       ColumnDefinitions="*,*,*,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
-                    <TextBox Grid.Column="0" Text="{Binding Vagon1}" MaxLength="6" Watermark="Вагон 1"/>
-                    <TextBox Grid.Column="1" Text="{Binding Vagon2}" MaxLength="6" Watermark="Вагон 2"/>
-                    <TextBox Grid.Column="2" Text="{Binding Vagon3}" MaxLength="6" Watermark="Вагон 3"/>
-                    <TextBox Grid.Column="3" Text="{Binding Vagon4}" MaxLength="6" Watermark="Вагон 4"/>
+                    <TextBox Grid.Column="0" Text="{Binding Vagon1}" MaxLength="6" PlaceholderText="Вагон 1"/>
+                    <TextBox Grid.Column="1" Text="{Binding Vagon2}" MaxLength="6" PlaceholderText="Вагон 2"/>
+                    <TextBox Grid.Column="2" Text="{Binding Vagon3}" MaxLength="6" PlaceholderText="Вагон 3"/>
+                    <TextBox Grid.Column="3" Text="{Binding Vagon4}" MaxLength="6" PlaceholderText="Вагон 4"/>
                 </Grid>
 
             </Grid>
