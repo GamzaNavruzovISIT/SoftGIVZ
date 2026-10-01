@@ -4,7 +4,7 @@
         x:Class="Soft_Givz.Views.VedomInputWindow"
         x:DataType="vm:VedomInputViewModel"
         Title="Ввод Ведомость 1"
-        Width="720" Height="760"
+        Width="760" Height="760"
         WindowStartupLocation="CenterOwner"
         CanResize="False">
 
@@ -63,44 +63,76 @@
                            FontWeight="SemiBold"
                            Margin="0,10,0,0"/>
 
-                <!-- Row 8 -->
+                <!-- Row 8 — Вагон 1 -->
                 <Grid Grid.Row="8" Grid.ColumnSpan="2"
-                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      ColumnDefinitions="40,80,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
                     <TextBlock Grid.Column="0" Text="1:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                     <TextBox Grid.Column="1" Text="{Binding Vagon1}" MaxLength="2" Watermark="Кол-во"/>
-                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="3" Text="{Binding Sokr1}" MaxLength="10"/>
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Vagons}"
+                              SelectedItem="{Binding SelectedSokr1}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
 
-                <!-- Row 9 -->
+                <!-- Row 9 — Вагон 2 -->
                 <Grid Grid.Row="9" Grid.ColumnSpan="2"
-                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      ColumnDefinitions="40,80,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
                     <TextBlock Grid.Column="0" Text="2:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                     <TextBox Grid.Column="1" Text="{Binding Vagon2}" MaxLength="2" Watermark="Кол-во"/>
-                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="3" Text="{Binding Sokr2}" MaxLength="10"/>
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Vagons}"
+                              SelectedItem="{Binding SelectedSokr2}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
 
-                <!-- Row 10 -->
+                <!-- Row 10 — Вагон 3 -->
                 <Grid Grid.Row="10" Grid.ColumnSpan="2"
-                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      ColumnDefinitions="40,80,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
                     <TextBlock Grid.Column="0" Text="3:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                     <TextBox Grid.Column="1" Text="{Binding Vagon3}" MaxLength="2" Watermark="Кол-во"/>
-                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="3" Text="{Binding Sokr3}" MaxLength="10"/>
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Vagons}"
+                              SelectedItem="{Binding SelectedSokr3}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
 
-                <!-- Row 11 -->
+                <!-- Row 11 — Вагон 4 -->
                 <Grid Grid.Row="11" Grid.ColumnSpan="2"
-                      ColumnDefinitions="60,80,60,*" ColumnSpacing="10"
+                      ColumnDefinitions="40,80,*" ColumnSpacing="10"
                       Margin="0,4,0,0">
                     <TextBlock Grid.Column="0" Text="4:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                     <TextBox Grid.Column="1" Text="{Binding Vagon4}" MaxLength="2" Watermark="Кол-во"/>
-                    <TextBlock Grid.Column="2" Text="сокр:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="3" Text="{Binding Sokr4}" MaxLength="10"/>
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Vagons}"
+                              SelectedItem="{Binding SelectedSokr4}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
 
                 <!-- Row 12 -->

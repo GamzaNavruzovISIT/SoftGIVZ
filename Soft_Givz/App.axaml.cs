@@ -40,6 +40,7 @@ public partial class App : Application
 
             var mergeService = new MergeService(factory);
             var universalRepo = new UniversalRepository(factory);
+            var vagonRepo = new VagonRepository(factory);
 
             desktop.MainWindow = new MainWindow
             {
@@ -47,7 +48,8 @@ public partial class App : Application
                     doroga1Repo, doroga2Repo,
                     vedom1Repo, vedom2Repo,
                     mergeService,
-                    universalRepo)
+                    universalRepo,
+                    vagonRepo)
             };
         }
 

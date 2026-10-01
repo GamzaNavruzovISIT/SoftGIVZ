@@ -20,6 +20,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly VedomRepository _vedom2Repo;
     private readonly MergeService _mergeService;
     private readonly UniversalRepository _universalRepo;
+    private readonly VagonRepository _vagonRepo;
 
     public MainWindowViewModel(
         DorogaRepository doroga1Repo,
@@ -27,7 +28,8 @@ public partial class MainWindowViewModel : ViewModelBase
         VedomRepository vedom1Repo,
         VedomRepository vedom2Repo,
         MergeService mergeService,
-        UniversalRepository universalRepo)
+        UniversalRepository universalRepo,
+        VagonRepository vagonRepo)
     {
         _doroga1Repo = doroga1Repo;
         _doroga2Repo = doroga2Repo;
@@ -35,9 +37,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _vedom2Repo = vedom2Repo;
         _mergeService = mergeService;
         _universalRepo = universalRepo;
+        _vagonRepo = vagonRepo;
     }
 
-    public MainWindowViewModel() : this(null!, null!, null!, null!, null!, null!) { }
+    public MainWindowViewModel() : this(null!, null!, null!, null!, null!, null!, null!) { }
 
     [ObservableProperty] private bool _isEntryMenuVisible;
 
@@ -118,13 +121,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task OpenDbEditorAsync()
     {
-        // 1. Открываем окно выбора таблицы
         var selectWindow = new TableSelectWindow();
         var table = await selectWindow.ShowDialog<string?>(GetMainWindow());
 
         if (string.IsNullOrEmpty(table)) return;
 
-        // 2. Определяем список колонок по имени таблицы
         string[] columns = table.StartsWith("doroga")
             ? new[]
             {
@@ -143,7 +144,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 "v_data_vv", "v_time_vv"
             };
 
-        // 3. Открываем окно с гридом
         var editorVm = new TableEditorViewModel(_universalRepo, table, columns);
         var editorWindow = new TableEditorWindow { DataContext = editorVm };
         await editorVm.LoadAsync();
@@ -161,9 +161,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OpenVedomInput(string title, VedomRepository repo)
     {
-        var vm = new VedomInputViewModel(repo);
+        var vm = new VedomInputViewModel(repo, _vagonRepo);
         var window = new VedomInputWindow { DataContext = vm, Title = title };
         vm.SaveSucceeded += () => window.Close();
+
+        // Загружаем справочник вагонов асинхронно
+        _ = vm.LoadVagonsAsync();
+
         window.Show();
     }
 

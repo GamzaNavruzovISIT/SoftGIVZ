@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -11,6 +12,7 @@ namespace Soft_Givz.ViewModels;
 public partial class VedomInputViewModel : ViewModelBase
 {
     private readonly VedomRepository _repo;
+    private readonly VagonRepository _vagonRepo;
 
     [ObservableProperty] private string _gmd = "";
 
@@ -22,14 +24,21 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _uchastok = "";
     [ObservableProperty] private string _gruz = "";
 
+    // ===== Вагоны: количество + выбранный тип из справочника =====
     [ObservableProperty] private string _vagon1 = "";
-    [ObservableProperty] private string _sokr1 = "";
+    [ObservableProperty] private Vagon? _selectedSokr1;
+
     [ObservableProperty] private string _vagon2 = "";
-    [ObservableProperty] private string _sokr2 = "";
+    [ObservableProperty] private Vagon? _selectedSokr2;
+
     [ObservableProperty] private string _vagon3 = "";
-    [ObservableProperty] private string _sokr3 = "";
+    [ObservableProperty] private Vagon? _selectedSokr3;
+
     [ObservableProperty] private string _vagon4 = "";
-    [ObservableProperty] private string _sokr4 = "";
+    [ObservableProperty] private Vagon? _selectedSokr4;
+
+    // Список для ComboBox
+    public ObservableCollection<Vagon> Vagons { get; } = new();
 
     [ObservableProperty] private string _vremyaProstoya = "";
     [ObservableProperty] private string _vremyaRaboty = "";
@@ -39,16 +48,31 @@ public partial class VedomInputViewModel : ViewModelBase
 
     public event Action? SaveSucceeded;
 
-    public VedomInputViewModel(VedomRepository repo)
+    public VedomInputViewModel(VedomRepository repo, VagonRepository vagonRepo)
     {
         _repo = repo;
+        _vagonRepo = vagonRepo;
 
         var now = DateTime.Now;
         int dekada = (now.Day - 1) / 10 + 1;
         Gmd = $"{now:yy}{now:MM}{dekada}";
     }
 
-    public VedomInputViewModel() : this(null!) { }
+    public VedomInputViewModel() : this(null!, null!) { }
+
+    public async Task LoadVagonsAsync()
+    {
+        try
+        {
+            var list = await _vagonRepo.GetAllAsync();
+            Vagons.Clear();
+            foreach (var v in list) Vagons.Add(v);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Ошибка загрузки справочника вагонов: " + ex.Message;
+        }
+    }
 
     [RelayCommand]
     private async Task SaveAsync()
@@ -56,6 +80,12 @@ public partial class VedomInputViewModel : ViewModelBase
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
             StatusMessage = dataError;
+            return;
+        }
+
+        if (!TryValidateVagons(out string? vagonError))
+        {
+            StatusMessage = vagonError;
             return;
         }
 
@@ -73,13 +103,13 @@ public partial class VedomInputViewModel : ViewModelBase
                 VGruz = NullIfEmpty(Gruz),
 
                 VKvag1 = ParseInt(Vagon1),
-                VSokr1 = NullIfEmpty(Sokr1),
+                VSokr1 = SelectedSokr1?.VagSokr,
                 VKvag2 = ParseInt(Vagon2),
-                VSokr2 = NullIfEmpty(Sokr2),
+                VSokr2 = SelectedSokr2?.VagSokr,
                 VKvag3 = ParseInt(Vagon3),
-                VSokr3 = NullIfEmpty(Sokr3),
+                VSokr3 = SelectedSokr3?.VagSokr,
                 VKvag4 = ParseInt(Vagon4),
-                VSokr4 = NullIfEmpty(Sokr4),
+                VSokr4 = SelectedSokr4?.VagSokr,
 
                 VProstoi = ParseDecimal(VremyaProstoya),
                 VTrab = ParseDecimal(VremyaRaboty),
@@ -103,6 +133,42 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
 
+    // ===== Валидация вагонов =====
+    private bool TryValidateVagons(out string? error)
+    {
+        error = null;
+
+        var pairs = new (string kol, Vagon? tip, int row)[]
+        {
+            (Vagon1, SelectedSokr1, 1),
+            (Vagon2, SelectedSokr2, 2),
+            (Vagon3, SelectedSokr3, 3),
+            (Vagon4, SelectedSokr4, 4),
+        };
+
+        foreach (var (kol, tip, row) in pairs)
+        {
+            int? k = ParseInt(kol);
+            bool hasKol = k.HasValue && k.Value > 0;
+            bool hasTip = tip != null;
+
+            if (hasKol && !hasTip)
+            {
+                error = $"Строка вагона {row}: указано количество, но не выбран тип";
+                return false;
+            }
+
+            if (hasTip && !hasKol)
+            {
+                error = $"Строка вагона {row}: выбран тип, но не указано количество";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // ===== Валидация даты ДДММ =====
     private static bool TryValidateDataDokumenta(string input, out string? error)
     {
         error = null;
