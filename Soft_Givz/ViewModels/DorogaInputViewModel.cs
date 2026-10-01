@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,11 +22,11 @@ public partial class DorogaInputViewModel : ViewModelBase
     [ObservableProperty] private string _gruz = "";
     [ObservableProperty] private string _podyomnayaSila = "";
     [ObservableProperty] private string _ves = "";
-    [ObservableProperty] private string _chisloMest = "";   // ← только UI, в БД пока не идёт
+    [ObservableProperty] private string _chisloMest = "";
     [ObservableProperty] private string _poluchatel = "";
     [ObservableProperty] private string _dataDokumenta = "";
 
-    // ===== Вагоны =====
+    // ===== Вагоны (4 поля в строчку) =====
     [ObservableProperty] private string _vagon1 = "";
     [ObservableProperty] private string _vagon2 = "";
     [ObservableProperty] private string _vagon3 = "";
@@ -34,6 +35,7 @@ public partial class DorogaInputViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = "";
 
     public event Action? SaveSucceeded;
+    public Func<string, Task<bool>>? ConfirmSaveAnyway;
 
     public DorogaInputViewModel(DorogaRepository repo)
     {
@@ -49,12 +51,31 @@ public partial class DorogaInputViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
+        // === 1. Проверка обязательных полей ===
+        var missing = GetMissingRequiredFields();
+        if (missing.Count > 0)
+        {
+            var message =
+                "Не заполнены обязательные поля:\n\n• " +
+                string.Join("\n• ", missing) +
+                "\n\nВсё равно сохранить?";
+
+            bool saveAnyway = ConfirmSaveAnyway != null
+                ? await ConfirmSaveAnyway(message)
+                : false;
+
+            if (!saveAnyway)
+                return;
+        }
+
+        // === 2. Дата ДДММ ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
-            StatusMessage = dataError;
+            StatusMessage = dataError ?? "Ошибка в дате документа";
             return;
         }
 
+        // === 3. Сохранение ===
         try
         {
             var model = new Doroga1
@@ -80,7 +101,7 @@ public partial class DorogaInputViewModel : ViewModelBase
                 DTimeVv = DateTime.Now.ToString("HH:mm:ss")
             };
 
-            // ChisloMest пока НЕ пишется в БД. Куда его класть — решим позже.
+            // ChisloMest пока НЕ пишется в БД
             _ = ChisloMest;
 
             await _repo.InsertAsync(model);
@@ -96,6 +117,25 @@ public partial class DorogaInputViewModel : ViewModelBase
 
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
+
+    // ===== Обязательные поля =====
+    private List<string> GetMissingRequiredFields()
+    {
+        var missing = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(Gmd)) missing.Add("Год, Месяц, Декада (ГМД)");
+        if (string.IsNullOrWhiteSpace(Pachka)) missing.Add("Номер пачки");
+        if (string.IsNullOrWhiteSpace(Otpravitel)) missing.Add("Отправитель");
+        if (string.IsNullOrWhiteSpace(StanciyaOtpravleniya)) missing.Add("Станция отправления");
+        if (string.IsNullOrWhiteSpace(StanciyaNaznacheniya)) missing.Add("Станция назначения");
+        if (string.IsNullOrWhiteSpace(Gruz)) missing.Add("Груз");
+        if (string.IsNullOrWhiteSpace(PodyomnayaSila)) missing.Add("Подъёмная сила");
+        if (string.IsNullOrWhiteSpace(Ves)) missing.Add("Вес");
+        if (string.IsNullOrWhiteSpace(Poluchatel)) missing.Add("Получатель");
+        if (string.IsNullOrWhiteSpace(DataDokumenta)) missing.Add("Дата (ДДММ)");
+
+        return missing;
+    }
 
     // ===== Валидация даты ДДММ =====
     private static bool TryValidateDataDokumenta(string input, out string? error)

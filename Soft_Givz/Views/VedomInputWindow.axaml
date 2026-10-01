@@ -4,7 +4,7 @@
         x:Class="Soft_Givz.Views.VedomInputWindow"
         x:DataType="vm:VedomInputViewModel"
         Title="Ввод Ведомость 1"
-        Width="760" Height="760"
+        Width="770" Height="760"
         WindowStartupLocation="CenterOwner"
         CanResize="False">
 

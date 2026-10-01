@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _uchastok = "";
     [ObservableProperty] private string _gruz = "";
 
-    // ===== Вагоны: количество + выбранный тип из справочника =====
+    // ===== Вагоны =====
     [ObservableProperty] private string _vagon1 = "";
     [ObservableProperty] private Vagon? _selectedSokr1;
 
@@ -37,7 +38,6 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _vagon4 = "";
     [ObservableProperty] private Vagon? _selectedSokr4;
 
-    // Список для ComboBox
     public ObservableCollection<Vagon> Vagons { get; } = new();
 
     [ObservableProperty] private string _vremyaProstoya = "";
@@ -47,6 +47,7 @@ public partial class VedomInputViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = "";
 
     public event Action? SaveSucceeded;
+    public Func<string, Task<bool>>? ConfirmSaveAnyway;
 
     public VedomInputViewModel(VedomRepository repo, VagonRepository vagonRepo)
     {
@@ -77,18 +78,38 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveAsync()
     {
+        // === 1. Проверка обязательных полей ===
+        var missing = GetMissingRequiredFields();
+        if (missing.Count > 0)
+        {
+            var message =
+                "Не заполнены обязательные поля:\n\n• " +
+                string.Join("\n• ", missing) +
+                "\n\nВсё равно сохранить?";
+
+            bool saveAnyway = ConfirmSaveAnyway != null
+                ? await ConfirmSaveAnyway(message)
+                : false;
+
+            if (!saveAnyway)
+                return;
+        }
+
+        // === 2. Дата ДДММ ===
         if (!TryValidateDataDokumenta(DataDokumenta, out string? dataError))
         {
-            StatusMessage = dataError;
+            StatusMessage = dataError ?? "Ошибка в дате документа";
             return;
         }
 
+        // === 3. Вагоны ===
         if (!TryValidateVagons(out string? vagonError))
         {
-            StatusMessage = vagonError;
+            StatusMessage = vagonError ?? "Ошибка в вагонах";
             return;
         }
 
+        // === 4. Сохранение ===
         try
         {
             var model = new Vedom1
@@ -133,7 +154,24 @@ public partial class VedomInputViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => SaveSucceeded?.Invoke();
 
-    // ===== Валидация вагонов =====
+    // ===== Обязательные поля =====
+    private List<string> GetMissingRequiredFields()
+    {
+        var missing = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(Gmd)) missing.Add("Год, Месяц, Декада (ГМД)");
+        if (string.IsNullOrWhiteSpace(Pachka)) missing.Add("Номер пачки");
+        if (string.IsNullOrWhiteSpace(Stanciya)) missing.Add("Станция");
+        if (string.IsNullOrWhiteSpace(NomerVedomosti)) missing.Add("№ ведомости");
+        if (string.IsNullOrWhiteSpace(TipLokomotiva)) missing.Add("Тип локомотива");
+        if (string.IsNullOrWhiteSpace(Otpravitel)) missing.Add("Отправитель");
+        if (string.IsNullOrWhiteSpace(Uchastok)) missing.Add("Участок");
+        if (string.IsNullOrWhiteSpace(Gruz)) missing.Add("Груз");
+        if (string.IsNullOrWhiteSpace(DataDokumenta)) missing.Add("Дата (ДДММ)");   // ← новое
+
+        return missing;
+    }
+
     private bool TryValidateVagons(out string? error)
     {
         error = null;
@@ -168,7 +206,6 @@ public partial class VedomInputViewModel : ViewModelBase
         return true;
     }
 
-    // ===== Валидация даты ДДММ =====
     private static bool TryValidateDataDokumenta(string input, out string? error)
     {
         error = null;
